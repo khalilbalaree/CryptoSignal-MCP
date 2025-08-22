@@ -33,7 +33,8 @@
 | ⏰ **Multiple Timeframes** | Support for 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M |
 | 🔄 **Real-time Data** | Live market data from Binance API with intelligent rate limiting and caching |
 | 🎯 **Smart Filtering** | Automatically filters incomplete trading periods for accurate analysis |
-| 📰 **News Integration** | Structured crypto news search framework with sentiment analysis |
+| 🔍 **WebSearch Integration** | Optimized search queries for Claude Code's WebSearch tool with sentiment analysis prompts |
+| 📊 **Polymarket Trader Analysis** | Monitor successful crypto traders' activities, positions, and trading patterns for behavioral insights |
 
 ## 🚀 Installation
 
@@ -113,17 +114,30 @@ analyze_crypto_indicators(
 
 ---
 
-### 📰 `fetch_crypto_news`
-> **Cryptocurrency news search framework with sentiment analysis**
+### 🔍 `get_crypto_news_search`
+> **Generate optimized search queries for Claude Code's WebSearch tool**
 
 ```python
-fetch_crypto_news(
-    symbol="bitcoin",           # Crypto symbol (default: bitcoin)
-    limit=5                     # Max news items (default: 5)
+get_crypto_news_search(
+    symbol="bitcoin"            # Crypto symbol (default: bitcoin)
 )
 ```
 
-**Returns:** Optimized search queries, reliable news sources, sentiment analysis framework
+**Returns:** Structured search data including optimized queries, reliable domains, and analysis prompts for use with Claude Code's WebSearch tool
+
+---
+
+### 📊 `monitor_polymarket_trader`
+> **Analyze successful crypto traders' positions and patterns on Polymarket**
+
+```python
+monitor_polymarket_trader(
+    trader_address="0x1234567890abcdef1234567890abcdef12345678",  # Ethereum wallet address
+    limit=100                                                    # Activities to fetch (default: 100)
+)
+```
+
+**Returns:** Complete trading activity history including positions, bet sizes, outcomes, timing, and P&L performance across crypto prediction markets
 
 ## 💡 Usage Examples
 
@@ -137,8 +151,11 @@ predict_crypto_direction("BTCUSDT", "1h", 1000)
 # Quick technical analysis for Ethereum (4-hour timeframe)
 analyze_crypto_indicators("ETHUSDT", "4h", 200)
 
-# Fetch news framework for Bitcoin
-fetch_crypto_news("bitcoin", 10)
+# Get search query for Bitcoin news analysis
+get_crypto_news_search("bitcoin")
+
+# Monitor successful crypto trader's activities
+monitor_polymarket_trader("0x1234567890abcdef1234567890abcdef12345678", 100)
 ```
 
 </details>
@@ -159,6 +176,14 @@ analyze_crypto_indicators("ADAUSDT", "2h", 100, 3, 7, 14)
 # Multi-timeframe analysis
 for timeframe in ["1h", "4h", "1d"]:
     analyze_crypto_indicators("BTCUSDT", timeframe)
+
+# Copy trading successful traders
+successful_traders = [
+    "0x1234567890abcdef1234567890abcdef12345678",
+    "0xabcdef1234567890abcdef1234567890abcdef12"
+]
+for trader in successful_traders:
+    monitor_polymarket_trader(trader, 100)
 ```
 
 </details>
