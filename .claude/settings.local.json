@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__crypto-predictor__predict_crypto_direction",
+      "mcp__crypto-predictor__analyze_crypto_indicators"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "crypto-predictor"
+  ]
+}

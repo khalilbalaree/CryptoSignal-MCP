@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "crypto-predictor": {
+      "command": "python",
+      "args": ["crypto_predictor_server.py"],
+      "cwd": "/Users/zijunwu/Desktop/poly-mcp"
+    }
+  }
+}
