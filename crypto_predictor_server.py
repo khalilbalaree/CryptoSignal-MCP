@@ -880,7 +880,7 @@ class CryptoPredictionService:
                 "prediction": "UP" if ensemble_prediction == 1 else "DOWN",
                 "prediction_window": time_info["prediction_window"],
                 "prediction_for_time": time_info["end_time"],
-                "prediction_target": f"Current period will close higher than previous period close (${df['close'].iloc[-1]:.2f}) by {time_info['end_time']} ET",
+                "prediction_target": f"Next period will close higher than current period close (${current_price:.2f}) by {time_info['end_time']}",
                 "current_time_et": time_info["current_time"],
                 "time_remaining": f"Prediction valid until {time_info['end_time']}",
                 "confidence": float(max(ensemble_prob_up, ensemble_prob_down)),
@@ -919,8 +919,8 @@ class CryptoPredictionService:
             logger.error(f"Error predicting for {symbol}: {e}")
             raise
     
-    async def fetch_crypto_news(self, symbol: str = "bitcoin", limit: int = 5) -> Dict[str, Any]:
-        """Fetch crypto news using web search with sentiment analysis"""
+    def get_crypto_news_search_query(self, symbol: str = "bitcoin", limit: int = 5) -> Dict[str, Any]:
+        """Generate optimized search query for crypto news using Claude Code's WebSearch"""
         try:
             # Normalize symbol for news queries
             news_symbol = symbol.replace("USDT", "").replace("BTC", "").lower()
@@ -929,41 +929,73 @@ class CryptoPredictionService:
             elif news_symbol == "eth":
                 news_symbol = "ethereum"
             
-            # Check cache first
-            cache_key = f"news_{news_symbol}_{limit}"
-            if cache_key in self.news_cache:
-                cached_data = self.news_cache[cache_key]
-                if time.time() - cached_data['timestamp'] < self.news_cache_ttl:
-                    return cached_data['data']
+            # Create optimized search query
+            search_query = f"{news_symbol} cryptocurrency news today price analysis market sentiment"
             
-            # For now, return a structured response that indicates web search is needed
-            news_data = {
+            return {
                 "symbol": news_symbol,
-                "search_query": f"{news_symbol} cryptocurrency news today market price",
-                "suggested_domains": ["coindesk.com", "cointelegraph.com", "decrypt.co"],
-                "sentiment_analysis": {
-                    "overall_sentiment": "neutral",
-                    "confidence": "low",
-                    "note": "News sentiment analysis requires web search implementation"
-                },
-                "market_impact": "unknown",
+                "search_query": search_query,
+                "suggested_domains": ["coindesk.com", "cointelegraph.com", "decrypt.co", "bitcoinmagazine.com", "cryptonews.com"],
+                "search_instructions": f"Search for recent news about {news_symbol} and analyze market sentiment",
+                "analysis_prompt": f"Analyze the sentiment and market impact of recent {news_symbol} news. Focus on: 1) Overall sentiment (bullish/bearish/neutral), 2) Key events affecting price, 3) Market impact assessment, 4) Trading implications",
                 "timestamp": datetime.now().isoformat(),
-                "status": "ready_for_websearch"
+                "status": "ready_for_websearch",
+                "note": "Use this query with Claude Code's WebSearch tool for real-time news analysis"
             }
-            
-            # Cache the results
-            self.news_cache[cache_key] = {
-                'data': news_data,
-                'timestamp': time.time()
-            }
-            
-            return news_data
             
         except Exception as e:
             logger.error(f"Error preparing crypto news search: {e}")
             return {
                 "error": str(e),
                 "symbol": symbol,
+                "timestamp": datetime.now().isoformat()
+            }
+
+    async def fetch_trader_activities(self, trader_address: str, limit: int = 200) -> Dict[str, Any]:
+        """Fetch Polymarket trader activities for analysis"""
+        try:
+            url = "https://data-api.polymarket.com/activity"
+            params = {
+                'user': trader_address,
+                'limit': limit,
+                'sortBy': 'TIMESTAMP',
+                'sortDirection': 'DESC'
+            }
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+                'Accept': 'application/json',
+            }
+            
+            response = await self.client.get(url, params=params, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            activities = data if isinstance(data, list) else data.get('data', [])
+            
+            # Group activities by slug with filtered content
+            grouped_activities = {}
+            for activity in activities:
+                slug = activity.get("slug")
+                if slug not in grouped_activities:
+                    grouped_activities[slug] = []
+                
+                filtered_activity = {
+                    "side": activity.get("side"),  # BUY or SELL
+                    "size": activity.get("size"),  # Number of shares
+                    "usdcSize": activity.get("usdcSize"),  # USD amount
+                    "price": activity.get("price"),  # Price per share
+                    "outcome": activity.get("outcome"),  # Up/Down/Yes/No
+                    "timestamp": activity.get("timestamp")
+                }
+                grouped_activities[slug].append(filtered_activity)
+            
+            return grouped_activities
+            
+        except Exception as e:
+            return {
+                "error": str(e),
+                "trader_address": trader_address,
                 "timestamp": datetime.now().isoformat()
             }
 
@@ -1190,26 +1222,55 @@ async def analyze_crypto_indicators(symbol: str, interval: str = "1h", limit: in
 
 
 @mcp.tool()
-async def fetch_crypto_news(symbol: str = "bitcoin", limit: int = 5) -> str:
+async def get_crypto_news_search(symbol: str = "bitcoin") -> str:
     """
-    Fetch latest cryptocurrency news and sentiment analysis.
-    Provides search queries and domains for web search integration.
+    Generate optimized search query for cryptocurrency news analysis.
+    Returns structured data to be used with Claude Code's WebSearch tool.
     
     Args:
         symbol: Cryptocurrency symbol (e.g., 'BTCUSDT', 'bitcoin', 'ethereum') - Default: 'bitcoin'
-        limit: Maximum number of news items to fetch - Default: 5
     
-    Returns: JSON object with news search information including:
-        Search Query: optimized query for web search tools
-        Suggested Domains: reliable crypto news sources
-        Symbol: normalized cryptocurrency name
-        Sentiment Framework: structure for sentiment analysis
-        Market Impact: framework for assessing news impact
-        Timestamp: when the search was prepared
+    Returns: JSON object with:
+        Search Query: optimized query for WebSearch tool
+        Suggested Domains: reliable crypto news sources  
+        Analysis Prompt: structured prompt for sentiment analysis
+        Search Instructions: how to use the query effectively
+        
+    Usage: Copy the search_query and use it with Claude Code's WebSearch tool, 
+    then apply the analysis_prompt to the results for market sentiment analysis.
     """
     try:
-        news_data = await crypto_service.fetch_crypto_news(symbol, limit)
-        return json.dumps(news_data, indent=2)
+        search_data = crypto_service.get_crypto_news_search_query(symbol)
+        return json.dumps(search_data, indent=2)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+@mcp.tool()
+async def monitor_polymarket_trader(trader_address: str, limit: int = 100) -> str:
+    """
+    Fetch Polymarket trader activities for behavioral analysis.
+    Returns raw activity data to understand trader patterns and strategies.
+    
+    Args:
+        trader_address: Ethereum wallet address of the trader to monitor
+        limit: Number of recent activities to fetch (default: 200, max: 1000)
+    
+    Returns: JSON object with:
+        Trader Info: address, total activities count
+        Activities: Complete list of trading activities with timestamps, markets, outcomes, sizes, prices
+        Raw Data: Full activity details for comprehensive analysis
+        
+    Usage: Analyze the returned activities to understand:
+    - Trading patterns and preferences (UP/DOWN, YES/NO outcomes)
+    - Market focus areas and diversification
+    - Position sizing and risk management
+    - Trading frequency and timing
+    - P&L performance across different markets
+    """
+    try:
+        trader_data = await crypto_service.fetch_trader_activities(trader_address, limit)
+        return json.dumps(trader_data, indent=2)
     except Exception as e:
         return json.dumps({"error": str(e)}, indent=2)
 
