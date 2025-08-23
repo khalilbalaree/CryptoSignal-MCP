@@ -1,0 +1,840 @@
+{
+  "test_timestamp": "2025-08-23T09:52:13.841185",
+  "symbols_tested": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "ADAUSDT"
+  ],
+  "intervals_tested": [
+    "1h",
+    "4h",
+    "1d"
+  ],
+  "results_summary": {
+    "successful_data_fetches": 9,
+    "successful_trainings": 4,
+    "successful_predictions": 4,
+    "total_tests": 9
+  },
+  "detailed_results": {
+    "BTCUSDT": {
+      "1h": {
+        "sample_data": [
+          {
+            "open_time": 1755604800000,
+            "open": 115508.71,
+            "high": 115617.84,
+            "low": 115282.7,
+            "close": 115599.99,
+            "volume": 338.93222,
+            "close_time": 1755608399999,
+            "quote_volume": 39138169.7841354,
+            "count": 76171,
+            "taker_buy_base": 182.48326,
+            "taker_buy_quote": 21072638.5139258
+          },
+          {
+            "open_time": 1755608400000,
+            "open": 115600.0,
+            "high": 115875.84,
+            "low": 114869.6,
+            "close": 115192.0,
+            "volume": 928.5804,
+            "close_time": 1755611999999,
+            "quote_volume": 107156050.7272402,
+            "count": 208318,
+            "taker_buy_base": 431.03683,
+            "taker_buy_quote": 49761383.8346239
+          },
+          {
+            "open_time": 1755612000000,
+            "open": 115192.0,
+            "high": 115378.82,
+            "low": 113770.34,
+            "close": 113882.66,
+            "volume": 2263.58751,
+            "close_time": 1755615599999,
+            "quote_volume": 258536311.3310114,
+            "count": 327903,
+            "taker_buy_base": 1051.82673,
+            "taker_buy_quote": 120138357.3990566
+          }
+        ],
+        "training_result": {
+          "symbol": "BTCUSDT",
+          "gradient_boosting_accuracy": 0.5447852760736197,
+          "svm_accuracy": 0.5521472392638036,
+          "ensemble_performance": {
+            "gb_std": 0.02466227146287335,
+            "svm_std": 0.011640285865650456,
+            "dynamic_weights": {
+              "gradient_boosting": 0.49664429530201354,
+              "svm": 0.5033557046979865
+            }
+          },
+          "samples": 980,
+          "features": 21,
+          "removed_correlated_features": 0,
+          "top_features": [
+            "volatility: 0.0957",
+            "rsi_14: 0.0857",
+            "atr: 0.0856",
+            "obv: 0.0849",
+            "close_position: 0.0749",
+            "macd_histogram: 0.0657",
+            "sharpe_ratio: 0.0614",
+            "body_size: 0.0609",
+            "momentum_5: 0.0605",
+            "williams_r: 0.0536"
+          ],
+          "class_distribution": {
+            "class_0": 497,
+            "class_1": 483
+          },
+          "model_trained": true,
+          "training_period": "1000 1h candles",
+          "selected_features": [
+            "price_change",
+            "volatility",
+            "momentum_5",
+            "sma_20",
+            "ema_12",
+            "macd_histogram",
+            "rsi_14",
+            "stoch_k",
+            "williams_r",
+            "bb_position"
+          ]
+        },
+        "prediction_result": {
+          "symbol": "BTCUSDT",
+          "current_price": 114896.86,
+          "period_open": 114621.48,
+          "period_change": 0.2402516526570802,
+          "price_change_24h": -0.7869647951617906,
+          "prediction": "UP",
+          "prediction_window": "August 23, 11-AM12PM ET",
+          "prediction_for_time": "12:00PM ET",
+          "prediction_target": "Next period will close higher than current period close ($114896.86) by 12:00PM ET",
+          "current_time_et": "August 23, 11:52:10AM ET",
+          "time_remaining": "Prediction valid until 12:00PM ET",
+          "confidence": 0.59909619594764,
+          "confidence_level": "MEDIUM",
+          "probability_up": 0.59909619594764,
+          "probability_down": 0.40090380405236004,
+          "model_predictions": {
+            "gradient_boosting": "UP",
+            "svm": "UP"
+          },
+          "model_probabilities": {
+            "gradient_boosting": {
+              "up": 0.6139560767625489,
+              "down": 0.38604392323745107
+            },
+            "svm": {
+              "up": 0.5844344468769298,
+              "down": 0.41556555312307025
+            }
+          },
+          "market_conditions": {
+            "rsi_oversold": true,
+            "rsi_overbought": false,
+            "high_volatility": false,
+            "strong_volume": false,
+            "near_resistance": false,
+            "near_support": true
+          },
+          "timestamp": "2025-08-23T09:52:10.404272",
+          "interval": "1h",
+          "data_quality": {
+            "samples_used": 1000,
+            "features_count": 21,
+            "has_sufficient_data": true
+          },
+          "model_weights": {},
+          "cv_scores": {
+            "gradient_boosting": 0.5447852760736197,
+            "svm": 0.5521472392638036,
+            "ensemble": 0.5
+          },
+          "confidence_breakdown": {
+            "probability_confidence": 0.39638478379055986,
+            "model_agreement": 1.0,
+            "cv_confidence": 0.06462167689161546,
+            "combined_confidence": 0.571478248894547,
+            "agreeing_models": 2,
+            "total_models": 2
+          }
+        }
+      },
+      "4h": {
+        "sample_data": [
+          {
+            "open_time": 1754524800000,
+            "open": 114992.27,
+            "high": 115185.58,
+            "low": 114404.22,
+            "close": 114546.03,
+            "volume": 1192.91433,
+            "close_time": 1754539199999,
+            "quote_volume": 136893563.3905805,
+            "count": 198112,
+            "taker_buy_base": 576.15563,
+            "taker_buy_quote": 66121446.950625
+          },
+          {
+            "open_time": 1754539200000,
+            "open": 114546.03,
+            "high": 114876.79,
+            "low": 114259.0,
+            "close": 114787.99,
+            "volume": 1290.96115,
+            "close_time": 1754553599999,
+            "quote_volume": 147895974.1728116,
+            "count": 209354,
+            "taker_buy_base": 642.22974,
+            "taker_buy_quote": 73587812.715447
+          },
+          {
+            "open_time": 1754553600000,
+            "open": 114787.99,
+            "high": 116828.93,
+            "low": 114787.98,
+            "close": 116519.53,
+            "volume": 3698.10885,
+            "close_time": 1754567999999,
+            "quote_volume": 428983588.2895274,
+            "count": 492704,
+            "taker_buy_base": 2172.12244,
+            "taker_buy_quote": 251905570.6636638
+          }
+        ]
+      },
+      "1d": {
+        "sample_data": [
+          {
+            "open_time": 1747353600000,
+            "open": 103763.71,
+            "high": 104550.33,
+            "low": 103100.49,
+            "close": 103463.9,
+            "volume": 15683.88024,
+            "close_time": 1747439999999,
+            "quote_volume": 1628832372.3241482,
+            "count": 3237442,
+            "taker_buy_base": 7555.15801,
+            "taker_buy_quote": 784850382.1942747
+          },
+          {
+            "open_time": 1747440000000,
+            "open": 103463.9,
+            "high": 103709.86,
+            "low": 102612.5,
+            "close": 103126.65,
+            "volume": 11250.89622,
+            "close_time": 1747526399999,
+            "quote_volume": 1160418362.950618,
+            "count": 2568597,
+            "taker_buy_base": 5335.11525,
+            "taker_buy_quote": 550379728.7338501
+          },
+          {
+            "open_time": 1747526400000,
+            "open": 103126.65,
+            "high": 106660.0,
+            "low": 103105.09,
+            "close": 106454.26,
+            "volume": 21599.98726,
+            "close_time": 1747612799999,
+            "quote_volume": 2262214972.0749383,
+            "count": 3193300,
+            "taker_buy_base": 11664.89904,
+            "taker_buy_quote": 1221914552.0552013
+          }
+        ],
+        "training_result": {
+          "symbol": "BTCUSDT",
+          "gradient_boosting_accuracy": 0.5239263803680981,
+          "svm_accuracy": 0.5042944785276073,
+          "ensemble_performance": {
+            "gb_std": 0.03395914724686637,
+            "svm_std": 0.0405836451743343,
+            "dynamic_weights": {
+              "gradient_boosting": 0.509546539379475,
+              "svm": 0.49045346062052514
+            }
+          },
+          "samples": 980,
+          "features": 21,
+          "removed_correlated_features": 0,
+          "top_features": [
+            "close_position: 0.1021",
+            "sharpe_ratio: 0.0883",
+            "distance_to_resistance: 0.0831",
+            "volatility: 0.0752",
+            "macd_histogram: 0.0713",
+            "rsi_14: 0.0709",
+            "ema_12: 0.0622",
+            "obv: 0.0619",
+            "bb_position: 0.0572",
+            "distance_to_support: 0.0550"
+          ],
+          "class_distribution": {
+            "class_0": 480,
+            "class_1": 500
+          },
+          "model_trained": true,
+          "training_period": "1000 1d candles",
+          "selected_features": [
+            "price_change",
+            "volatility",
+            "momentum_5",
+            "sma_20",
+            "ema_12",
+            "macd_histogram",
+            "rsi_14",
+            "stoch_k",
+            "williams_r",
+            "bb_position"
+          ]
+        },
+        "prediction_result": {
+          "symbol": "BTCUSDT",
+          "current_price": 114896.86,
+          "period_open": 116936.0,
+          "period_change": -1.7438085790517885,
+          "price_change_24h": -2.589131261214421,
+          "prediction": "DOWN",
+          "prediction_window": "August 22, 8-PM09PM ET",
+          "prediction_for_time": "09:00PM ET",
+          "prediction_target": "Next period will close higher than current period close ($114896.86) by 09:00PM ET",
+          "current_time_et": "August 23, 11:52:12AM ET",
+          "time_remaining": "Prediction valid until 09:00PM ET",
+          "confidence": 0.5119035168761713,
+          "confidence_level": "LOW",
+          "probability_up": 0.4880964831238287,
+          "probability_down": 0.5119035168761713,
+          "model_predictions": {
+            "gradient_boosting": "DOWN",
+            "svm": "DOWN"
+          },
+          "model_probabilities": {
+            "gradient_boosting": {
+              "up": 0.4826079421538999,
+              "down": 0.5173920578461001
+            },
+            "svm": {
+              "up": 0.49379868992227066,
+              "down": 0.5062013100777294
+            }
+          },
+          "market_conditions": {
+            "rsi_oversold": true,
+            "rsi_overbought": false,
+            "high_volatility": false,
+            "strong_volume": false,
+            "near_resistance": true,
+            "near_support": true
+          },
+          "timestamp": "2025-08-23T09:52:12.423096",
+          "interval": "1d",
+          "data_quality": {
+            "samples_used": 1000,
+            "features_count": 21,
+            "has_sufficient_data": true
+          },
+          "model_weights": {},
+          "cv_scores": {
+            "gradient_boosting": 0.5239263803680981,
+            "svm": 0.5042944785276073,
+            "ensemble": 0.5
+          },
+          "confidence_breakdown": {
+            "probability_confidence": 0.04761406750468522,
+            "model_agreement": 1.0,
+            "cv_confidence": 0.018813905930470165,
+            "combined_confidence": 0.4228084081879681,
+            "agreeing_models": 2,
+            "total_models": 2
+          }
+        }
+      },
+      "30m": {
+        "training_result": {
+          "symbol": "BTCUSDT",
+          "gradient_boosting_accuracy": 0.5337423312883435,
+          "svm_accuracy": 0.5361963190184049,
+          "ensemble_performance": {
+            "gb_std": 0.05636163964591828,
+            "svm_std": 0.015808710094141247,
+            "dynamic_weights": {
+              "gradient_boosting": 0.49885321100917424,
+              "svm": 0.5011467889908257
+            }
+          },
+          "samples": 980,
+          "features": 21,
+          "removed_correlated_features": 0,
+          "top_features": [
+            "distance_to_resistance: 0.0872",
+            "sharpe_ratio: 0.0805",
+            "momentum_5: 0.0731",
+            "volatility: 0.0680",
+            "price_change: 0.0677",
+            "stoch_k: 0.0658",
+            "ema_12: 0.0641",
+            "close_position: 0.0630",
+            "macd_histogram: 0.0618",
+            "obv: 0.0596"
+          ],
+          "class_distribution": {
+            "class_0": 505,
+            "class_1": 475
+          },
+          "model_trained": true,
+          "training_period": "1000 30m candles",
+          "selected_features": [
+            "price_change",
+            "volatility",
+            "momentum_5",
+            "sma_20",
+            "ema_12",
+            "macd_histogram",
+            "rsi_14",
+            "stoch_k",
+            "williams_r",
+            "bb_position"
+          ]
+        },
+        "prediction_result": {
+          "symbol": "BTCUSDT",
+          "current_price": 114896.86,
+          "period_open": 114900.0,
+          "period_change": -0.0027328111401213385,
+          "price_change_24h": -0.7115349301440322,
+          "prediction": "DOWN",
+          "prediction_window": "August 23, 11:30AM ET - 12:00PM ET",
+          "prediction_for_time": "12:00PM ET",
+          "prediction_target": "Next period will close higher than current period close ($114896.86) by 12:00PM ET",
+          "current_time_et": "August 23, 11:52:11AM ET",
+          "time_remaining": "Prediction valid until 12:00PM ET",
+          "confidence": 0.5478385639330463,
+          "confidence_level": "LOW",
+          "probability_up": 0.4521614360669537,
+          "probability_down": 0.5478385639330463,
+          "model_predictions": {
+            "gradient_boosting": "DOWN",
+            "svm": "DOWN"
+          },
+          "model_probabilities": {
+            "gradient_boosting": {
+              "up": 0.4569682429058239,
+              "down": 0.5430317570941761
+            },
+            "svm": {
+              "up": 0.44737662834405084,
+              "down": 0.5526233716559491
+            }
+          },
+          "market_conditions": {
+            "rsi_oversold": true,
+            "rsi_overbought": false,
+            "high_volatility": false,
+            "strong_volume": false,
+            "near_resistance": false,
+            "near_support": true
+          },
+          "timestamp": "2025-08-23T09:52:11.434238",
+          "interval": "30m",
+          "data_quality": {
+            "samples_used": 1000,
+            "features_count": 21,
+            "has_sufficient_data": true
+          },
+          "model_weights": {},
+          "cv_scores": {
+            "gradient_boosting": 0.5337423312883435,
+            "svm": 0.5361963190184049,
+            "ensemble": 0.5
+          },
+          "confidence_breakdown": {
+            "probability_confidence": 0.19135425573218523,
+            "model_agreement": 1.0,
+            "cv_confidence": 0.0466257668711656,
+            "combined_confidence": 0.48586685566710724,
+            "agreeing_models": 2,
+            "total_models": 2
+          }
+        }
+      }
+    },
+    "ETHUSDT": {
+      "1h": {
+        "sample_data": [
+          {
+            "open_time": 1755604800000,
+            "open": 4308.94,
+            "high": 4315.0,
+            "low": 4284.23,
+            "close": 4305.68,
+            "volume": 15906.8837,
+            "close_time": 1755608399999,
+            "quote_volume": 68388417.766052,
+            "count": 115182,
+            "taker_buy_base": 8222.5926,
+            "taker_buy_quote": 35352690.589042
+          },
+          {
+            "open_time": 1755608400000,
+            "open": 4305.68,
+            "high": 4340.15,
+            "low": 4264.31,
+            "close": 4292.03,
+            "volume": 45134.0549,
+            "close_time": 1755611999999,
+            "quote_volume": 193969247.550667,
+            "count": 305942,
+            "taker_buy_base": 23455.4522,
+            "taker_buy_quote": 100829810.352396
+          },
+          {
+            "open_time": 1755612000000,
+            "open": 4292.02,
+            "high": 4306.51,
+            "low": 4180.82,
+            "close": 4191.6,
+            "volume": 106201.9893,
+            "close_time": 1755615599999,
+            "quote_volume": 447912570.791914,
+            "count": 459245,
+            "taker_buy_base": 50895.4386,
+            "taker_buy_quote": 214568786.14743
+          }
+        ]
+      },
+      "4h": {
+        "sample_data": [
+          {
+            "open_time": 1754524800000,
+            "open": 3683.31,
+            "high": 3716.61,
+            "low": 3647.63,
+            "close": 3656.78,
+            "volume": 56122.7246,
+            "close_time": 1754539199999,
+            "quote_volume": 206533185.483312,
+            "count": 367749,
+            "taker_buy_base": 29184.2277,
+            "taker_buy_quote": 107461474.779901
+          },
+          {
+            "open_time": 1754539200000,
+            "open": 3656.78,
+            "high": 3711.0,
+            "low": 3655.09,
+            "close": 3702.4,
+            "volume": 46356.287,
+            "close_time": 1754553599999,
+            "quote_volume": 171004931.19402,
+            "count": 305321,
+            "taker_buy_base": 24778.6985,
+            "taker_buy_quote": 91386243.178935
+          },
+          {
+            "open_time": 1754553600000,
+            "open": 3702.41,
+            "high": 3843.66,
+            "low": 3702.41,
+            "close": 3827.0,
+            "volume": 183717.2969,
+            "close_time": 1754567999999,
+            "quote_volume": 695025955.182591,
+            "count": 720559,
+            "taker_buy_base": 102735.4091,
+            "taker_buy_quote": 388390681.299562
+          }
+        ],
+        "training_result": {
+          "symbol": "ETHUSDT",
+          "gradient_boosting_accuracy": 0.48466257668711654,
+          "svm_accuracy": 0.5263803680981595,
+          "ensemble_performance": {
+            "gb_std": 0.03104076230840126,
+            "svm_std": 0.03983480510612988,
+            "dynamic_weights": {
+              "gradient_boosting": 0.47936893203883496,
+              "svm": 0.5206310679611651
+            }
+          },
+          "samples": 980,
+          "features": 21,
+          "removed_correlated_features": 0,
+          "top_features": [
+            "sharpe_ratio: 0.0873",
+            "bb_position: 0.0846",
+            "momentum_5: 0.0806",
+            "atr: 0.0755",
+            "ema_12: 0.0745",
+            "distance_to_resistance: 0.0712",
+            "close_position: 0.0671",
+            "williams_r: 0.0670",
+            "stoch_k: 0.0584",
+            "body_size: 0.0551"
+          ],
+          "class_distribution": {
+            "class_0": 466,
+            "class_1": 514
+          },
+          "model_trained": true,
+          "training_period": "1000 4h candles",
+          "selected_features": [
+            "price_change",
+            "volatility",
+            "momentum_5",
+            "sma_20",
+            "ema_12",
+            "macd_histogram",
+            "rsi_14",
+            "stoch_k",
+            "williams_r",
+            "bb_position"
+          ]
+        },
+        "prediction_result": {
+          "symbol": "ETHUSDT",
+          "current_price": 4760.76,
+          "period_open": 4704.95,
+          "period_change": 1.1861975153827438,
+          "price_change_24h": 10.48589789112378,
+          "prediction": "UP",
+          "prediction_window": "August 23, 8:00AM ET - 12:00PM ET",
+          "prediction_for_time": "12:00PM ET",
+          "prediction_target": "Next period will close higher than current period close ($4760.76) by 12:00PM ET",
+          "current_time_et": "August 23, 11:52:12AM ET",
+          "time_remaining": "Prediction valid until 12:00PM ET",
+          "confidence": 0.5176739494101275,
+          "confidence_level": "LOW",
+          "probability_up": 0.5176739494101275,
+          "probability_down": 0.48232605058987255,
+          "model_predictions": {
+            "gradient_boosting": "UP",
+            "svm": "DOWN"
+          },
+          "model_probabilities": {
+            "gradient_boosting": {
+              "up": 0.511873982878063,
+              "down": 0.48812601712193704
+            },
+            "svm": {
+              "up": 0.5230142449349886,
+              "down": 0.47698575506501156
+            }
+          },
+          "market_conditions": {
+            "rsi_oversold": true,
+            "rsi_overbought": false,
+            "high_volatility": true,
+            "strong_volume": false,
+            "near_resistance": true,
+            "near_support": false
+          },
+          "timestamp": "2025-08-23T09:52:12.531796",
+          "interval": "4h",
+          "data_quality": {
+            "samples_used": 1000,
+            "features_count": 21,
+            "has_sufficient_data": true
+          },
+          "model_weights": {},
+          "cv_scores": {
+            "gradient_boosting": 0.48466257668711654,
+            "svm": 0.5263803680981595,
+            "ensemble": 0.5
+          },
+          "confidence_breakdown": {
+            "probability_confidence": 0.07069579764050982,
+            "model_agreement": 0.5,
+            "cv_confidence": 0.007361963190184007,
+            "combined_confidence": 0.22975071169424074,
+            "agreeing_models": 1,
+            "total_models": 2
+          }
+        }
+      },
+      "1d": {
+        "sample_data": [
+          {
+            "open_time": 1747353600000,
+            "open": 2548.7,
+            "high": 2649.31,
+            "low": 2529.4,
+            "close": 2537.12,
+            "volume": 605953.6919,
+            "close_time": 1747439999999,
+            "quote_volume": 1568128704.046345,
+            "count": 3310498,
+            "taker_buy_base": 323624.7041,
+            "taker_buy_quote": 837990689.566938
+          },
+          {
+            "open_time": 1747440000000,
+            "open": 2537.13,
+            "high": 2538.16,
+            "low": 2446.42,
+            "close": 2475.08,
+            "volume": 494333.2782,
+            "close_time": 1747526399999,
+            "quote_volume": 1227578098.31878,
+            "count": 2950197,
+            "taker_buy_base": 227882.8455,
+            "taker_buy_quote": 566013389.009042
+          },
+          {
+            "open_time": 1747526400000,
+            "open": 2475.09,
+            "high": 2587.61,
+            "low": 2323.21,
+            "close": 2497.78,
+            "volume": 810103.1851,
+            "close_time": 1747612799999,
+            "quote_volume": 2001441345.434297,
+            "count": 3416878,
+            "taker_buy_base": 400896.368,
+            "taker_buy_quote": 990832542.382129
+          }
+        ]
+      }
+    },
+    "ADAUSDT": {
+      "1h": {
+        "sample_data": [
+          {
+            "open_time": 1755604800000,
+            "open": 0.9314,
+            "high": 0.9355,
+            "low": 0.923,
+            "close": 0.9279,
+            "volume": 7337232.6,
+            "close_time": 1755608399999,
+            "quote_volume": 6819799.86183,
+            "count": 25448,
+            "taker_buy_base": 3505456.0,
+            "taker_buy_quote": 3260312.12588
+          },
+          {
+            "open_time": 1755608400000,
+            "open": 0.9279,
+            "high": 0.9321,
+            "low": 0.9133,
+            "close": 0.9221,
+            "volume": 12773094.1,
+            "close_time": 1755611999999,
+            "quote_volume": 11768955.73401,
+            "count": 41242,
+            "taker_buy_base": 6066694.6,
+            "taker_buy_quote": 5591642.2293
+          },
+          {
+            "open_time": 1755612000000,
+            "open": 0.9221,
+            "high": 0.926,
+            "low": 0.8957,
+            "close": 0.8967,
+            "volume": 27309675.8,
+            "close_time": 1755615599999,
+            "quote_volume": 24718798.24876,
+            "count": 78694,
+            "taker_buy_base": 12148154.1,
+            "taker_buy_quote": 11000381.6667
+          }
+        ]
+      },
+      "4h": {
+        "sample_data": [
+          {
+            "open_time": 1754524800000,
+            "open": 0.7413,
+            "high": 0.7462,
+            "low": 0.7342,
+            "close": 0.7343,
+            "volume": 9925327.9,
+            "close_time": 1754539199999,
+            "quote_volume": 7337097.96371,
+            "count": 25588,
+            "taker_buy_base": 4695974.4,
+            "taker_buy_quote": 3472450.65804
+          },
+          {
+            "open_time": 1754539200000,
+            "open": 0.7343,
+            "high": 0.744,
+            "low": 0.734,
+            "close": 0.7413,
+            "volume": 15843491.3,
+            "close_time": 1754553599999,
+            "quote_volume": 11730465.83489,
+            "count": 30984,
+            "taker_buy_base": 7921736.0,
+            "taker_buy_quote": 5865097.23297
+          },
+          {
+            "open_time": 1754553600000,
+            "open": 0.7414,
+            "high": 0.77,
+            "low": 0.7399,
+            "close": 0.7674,
+            "volume": 35313822.6,
+            "close_time": 1754567999999,
+            "quote_volume": 26812703.0349,
+            "count": 69716,
+            "taker_buy_base": 18272082.2,
+            "taker_buy_quote": 13861638.71143
+          }
+        ]
+      },
+      "1d": {
+        "sample_data": [
+          {
+            "open_time": 1747353600000,
+            "open": 0.7624,
+            "high": 0.7859,
+            "low": 0.7505,
+            "close": 0.7588,
+            "volume": 89428901.1,
+            "close_time": 1747439999999,
+            "quote_volume": 69187209.20108,
+            "count": 281130,
+            "taker_buy_base": 45547508.8,
+            "taker_buy_quote": 35245393.73684
+          },
+          {
+            "open_time": 1747440000000,
+            "open": 0.7588,
+            "high": 0.7814,
+            "low": 0.7267,
+            "close": 0.7427,
+            "volume": 127369154.9,
+            "close_time": 1747526399999,
+            "quote_volume": 95638132.27526,
+            "count": 358223,
+            "taker_buy_base": 64476149.5,
+            "taker_buy_quote": 48395703.05486
+          },
+          {
+            "open_time": 1747526400000,
+            "open": 0.7428,
+            "high": 0.7767,
+            "low": 0.7171,
+            "close": 0.7596,
+            "volume": 137043357.8,
+            "close_time": 1747612799999,
+            "quote_volume": 102747560.9634,
+            "count": 400023,
+            "taker_buy_base": 67917404.9,
+            "taker_buy_quote": 50952960.74517
+          }
+        ]
+      }
+    }
+  }
+}

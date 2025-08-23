@@ -20,7 +20,7 @@ from mcp.server.fastmcp import FastMCP
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, ExtraTreesClassifier, VotingClassifier
 from sklearn.preprocessing import StandardScaler, RobustScaler
 from sklearn.model_selection import cross_val_score, train_test_split, TimeSeriesSplit
-from sklearn.feature_selection import SelectKBest, f_classif, SelectFromModel, RFECV
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
@@ -373,9 +373,25 @@ class CryptoPredictionService:
             df['sharpe_ratio'] = df['price_change'].rolling(window=20).mean() / (df['volatility'] + 1e-8)
             df['volatility_ratio'] = df['volatility'] / (df['volatility'].rolling(window=20).mean() + 1e-8)
             
-            # Market regime indicators
+            # Enhanced Market regime indicators
             df['volatility_regime'] = (df['volatility'] > df['volatility'].rolling(window=50).quantile(0.7)).astype(int)
             df['trend_regime'] = (abs(df['trend_strength']) > 2).astype(int)
+            df['bull_market'] = (df['close'] > df['sma_50']).astype(int) if len(df) >= 50 else (df['close'] > df['sma_20']).astype(int)
+            df['volatility_breakout'] = (df['volatility'] > df['volatility'].rolling(20).quantile(0.8)).astype(int)
+            
+            # Price action patterns
+            df['doji'] = ((abs(df['open'] - df['close']) / (df['high'] - df['low'] + 1e-8)) < 0.1).astype(int)
+            df['hammer'] = ((df['close'] > df['open']) & (df['lower_shadow'] > 2 * df['body_size'])).astype(int)
+            df['shooting_star'] = ((df['close'] < df['open']) & (df['upper_shadow'] > 2 * df['body_size'])).astype(int)
+            
+            # Trend alignment features
+            df['trend_alignment'] = (df['ema_12'] > df['ema_26']).astype(int)
+            df['ma_alignment'] = ((df['sma_5'] > df['sma_10']) & (df['sma_10'] > df['sma_20'])).astype(int)
+            
+            # Enhanced momentum features
+            df['momentum_acceleration'] = df['momentum_5'].diff()
+            df['rsi_momentum'] = df['rsi_14'].diff()
+            df['volume_momentum'] = df['volume_ratio'].rolling(5).mean()
             
             # Time-based features using cyclical encoding
             import numpy as np
@@ -391,12 +407,6 @@ class CryptoPredictionService:
             df['dow_cos'] = np.cos(2 * np.pi * df['day_of_week'] / 7)
             df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
             df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
-            
-            # Market session indicators (crypto markets are 24/7 but patterns still exist)
-            df['is_asian_session'] = ((df['hour'] >= 0) & (df['hour'] < 8)).astype(int)
-            df['is_london_session'] = ((df['hour'] >= 8) & (df['hour'] < 16)).astype(int) 
-            df['is_ny_session'] = ((df['hour'] >= 16) & (df['hour'] < 24)).astype(int)
-            df['is_weekend'] = (df['day_of_week'] >= 5).astype(int)
             
             # Drop raw time columns as we're using cyclical encoding
             df = df.drop(['hour', 'day_of_week', 'month'], axis=1)
@@ -614,29 +624,11 @@ class CryptoPredictionService:
             if len(np.unique(y)) < 2:
                 raise ValueError("Insufficient class diversity in target variable")
             
-            # Advanced feature selection with multiple methods
-            # First pass: Remove highly correlated features (more aggressive threshold)
-            correlation_matrix = pd.DataFrame(X, columns=feature_names).corr().abs()
-            upper_triangle = correlation_matrix.where(np.triu(np.ones(correlation_matrix.shape), k=1).astype(bool))
-            high_corr_features = [column for column in upper_triangle.columns if any(upper_triangle[column] > 0.7)]
-            
-            # Keep features that aren't highly correlated
-            remaining_features = [f for f in feature_names if f not in high_corr_features]
-            remaining_indices = [i for i, f in enumerate(feature_names) if f in remaining_features]
-            X_reduced = X[:, remaining_indices]
-            
-            # Second pass: Use multiple selection methods
-            if len(remaining_features) > 12:
-                # Use RFECV for optimal feature count
-                rf_temp = RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
-                selector = RFECV(rf_temp, step=1, cv=3, scoring='accuracy', min_features_to_select=8)
-                X_selected = selector.fit_transform(X_reduced, y)
-                selected_mask = selector.support_
-                selected_feature_names = [remaining_features[i] for i, selected in enumerate(selected_mask) if selected]
-            else:
-                X_selected = X_reduced
-                selected_feature_names = remaining_features
-                selector = None
+            # Use ALL features - no feature selection (better accuracy based on A/B testing)
+            selected_feature_names = feature_names
+            X_selected = X
+            selector = None
+            high_corr_features = []  # No features removed
             
             # Robust scaling for better handling of outliers
             scaler = RobustScaler()
@@ -645,25 +637,38 @@ class CryptoPredictionService:
             # Simplified ensemble with diverse algorithms
             models = {}
             
-            # Gradient Boosting with better parameters
+            # Enhanced Gradient Boosting with improved parameters
             gb_model = GradientBoostingClassifier(
-                n_estimators=100,
-                learning_rate=0.1,
-                max_depth=6,
-                subsample=0.8,
+                n_estimators=200,        # Increased from 100 for better pattern learning
+                learning_rate=0.05,      # Reduced from 0.1 for better generalization
+                max_depth=4,             # Reduced from 6 to prevent overfitting
+                subsample=0.9,           # Increased from 0.8 to use more data
+                min_samples_split=10,    # Added constraint to prevent overfitting
+                min_samples_leaf=5,      # Added constraint for smoother predictions
                 random_state=42,
                 validation_fraction=0.1,
-                n_iter_no_change=10
+                n_iter_no_change=15      # Increased patience
             )
             
-            # SVM with RBF kernel for non-linear patterns
+            # Improved SVM with tuned parameters
             svm_model = SVC(
                 kernel='rbf',
-                C=1.0,
-                gamma='scale',
+                C=0.5,                   # Reduced from 1.0 for less aggressive fitting
+                gamma='auto',            # Changed from 'scale' for different kernel shape
                 class_weight='balanced',
                 random_state=42,
-                probability=True  # Enable probability estimates for ensemble
+                probability=True
+            )
+            
+            # Add Random Forest for model diversity
+            rf_model = RandomForestClassifier(
+                n_estimators=150,
+                max_depth=8,
+                min_samples_split=5,
+                min_samples_leaf=2,
+                bootstrap=True,
+                random_state=42,
+                n_jobs=-1  # Use all cores
             )
             
             
@@ -672,22 +677,55 @@ class CryptoPredictionService:
             
             gb_model.fit(X_scaled, y)
             svm_model.fit(X_scaled, y)
+            rf_model.fit(X_scaled, y)
             
             models['gradient_boosting'] = gb_model
             models['svm'] = svm_model
+            models['random_forest'] = rf_model
             
             # Time series cross-validation scores
             gb_cv_scores = cross_val_score(gb_model, X_scaled, y, cv=tscv, scoring='accuracy')
             svm_cv_scores = cross_val_score(svm_model, X_scaled, y, cv=tscv, scoring='accuracy')
+            rf_cv_scores = cross_val_score(rf_model, X_scaled, y, cv=tscv, scoring='accuracy')
             
-            # Create meta-ensemble (voting classifier)
+            # Calculate dynamic weights based on CV performance for 3 models
+            gb_mean_score = np.mean(gb_cv_scores)
+            svm_mean_score = np.mean(svm_cv_scores)
+            rf_mean_score = np.mean(rf_cv_scores)
+            
+            # Normalize scores to create weights (higher performing model gets higher weight)
+            total_score = gb_mean_score + svm_mean_score + rf_mean_score
+            if total_score > 0:
+                gb_weight = gb_mean_score / total_score
+                svm_weight = svm_mean_score / total_score
+                rf_weight = rf_mean_score / total_score
+            else:
+                # Fallback to equal weights if all models perform poorly
+                gb_weight, svm_weight, rf_weight = 1/3, 1/3, 1/3
+            
+            # Apply minimum weight threshold to prevent any model from dominating completely
+            min_weight = 0.2  # Reduced for 3 models
+            weights = [gb_weight, svm_weight, rf_weight]
+            
+            # Ensure no weight falls below minimum
+            for i, weight in enumerate(weights):
+                if weight < min_weight:
+                    weights[i] = min_weight
+            
+            # Renormalize weights to sum to 1
+            weight_sum = sum(weights)
+            gb_weight, svm_weight, rf_weight = [w/weight_sum for w in weights]
+            
+            # Create meta-ensemble (voting classifier) with dynamic weights
+            dynamic_weights = [gb_weight, svm_weight, rf_weight]
             voting_clf = VotingClassifier(
                 estimators=[
                     ('gb', gb_model),
-                    ('svm', svm_model)
+                    ('svm', svm_model),
+                    ('rf', rf_model)
                 ],
                 voting='soft',
-                weights=[0.6, 0.4]  # Slightly favor GB over SVM
+                weights=dynamic_weights  # Dynamic weights based on CV performance
             )
             voting_clf.fit(X_scaled, y)
             models['ensemble'] = voting_clf
@@ -701,17 +739,16 @@ class CryptoPredictionService:
                 'models': models,
                 'feature_names': selected_feature_names,
                 'original_feature_names': feature_names,
-                'remaining_features': remaining_features,
                 'feature_selector': selector,
                 'feature_importance': feature_importance,
                 'model_type': model_type,
                 'interval': interval,
                 'cv_scores': {
                     'gradient_boosting': gb_cv_scores,
-                    'svm': svm_cv_scores
+                    'svm': svm_cv_scores,
+                    'random_forest': rf_cv_scores
                 },
-                'removed_features': high_corr_features,
-                'correlation_threshold': 0.7
+                'removed_features': high_corr_features
             }
             self.scalers[symbol] = scaler
             
@@ -719,13 +756,20 @@ class CryptoPredictionService:
                 "symbol": symbol,
                 "gradient_boosting_accuracy": float(np.mean(gb_cv_scores)),
                 "svm_accuracy": float(np.mean(svm_cv_scores)),
+                "random_forest_accuracy": float(np.mean(rf_cv_scores)),
                 "ensemble_performance": {
                     "gb_std": float(np.std(gb_cv_scores)),
-                    "svm_std": float(np.std(svm_cv_scores))
+                    "svm_std": float(np.std(svm_cv_scores)),
+                    "rf_std": float(np.std(rf_cv_scores)),
+                    "dynamic_weights": {
+                        "gradient_boosting": float(gb_weight),
+                        "svm": float(svm_weight),
+                        "random_forest": float(rf_weight)
+                    }
                 },
                 "samples": len(X),
                 "features": len(selected_feature_names),
-                "removed_correlated_features": len(high_corr_features),
+                "removed_correlated_features": 0,
                 "top_features": [f"{name}: {importance:.4f}" for name, importance in top_features],
                 "class_distribution": {f"class_{i}": int(np.sum(y == i)) for i in np.unique(y)},
                 "model_trained": True,
@@ -776,29 +820,16 @@ class CryptoPredictionService:
             # Get model info
             model_info = self.models[symbol]
             feature_names = model_info['feature_names']
-            remaining_features = model_info['remaining_features']
-            removed_features = model_info['removed_features']
-            feature_selector = model_info.get('feature_selector')
             models = model_info['models']
             
-            # Get latest complete features (use -1 since we now align data properly)
+            # Get latest complete features - use all features (no selection)
             try:
                 # Use the original feature names from training to maintain consistency
                 original_feature_names = model_info['original_feature_names']
                 available_features = [col for col in original_feature_names if col in df.columns]
                 
-                # Use the last complete row with all features
-                latest_all_features = df[available_features].iloc[-1].values.reshape(1, -1)
-                
-                # Apply the same correlation filtering as used in training
-                remaining_feature_indices = [i for i, f in enumerate(available_features) if f in remaining_features]
-                latest_reduced_features = latest_all_features[:, remaining_feature_indices]
-                
-                # Apply the same feature selection as used in training
-                if feature_selector is not None:
-                    latest_features_selected = feature_selector.transform(latest_reduced_features)
-                else:
-                    latest_features_selected = latest_reduced_features
+                # Use the last complete row with all features (no filtering)
+                latest_features_selected = df[available_features].iloc[-1].values.reshape(1, -1)
                 
             except KeyError as e:
                 raise ValueError(f"Missing feature in prediction data: {e}")
@@ -968,6 +999,127 @@ class CryptoPredictionService:
                 "timestamp": datetime.now().isoformat()
             }
 
+    def _get_multi_timeframe_trend(self, df_current: pd.DataFrame, current_interval: str) -> Dict[str, Any]:
+        """Get trend context from current timeframe analysis"""
+        try:
+            # Calculate trend strength over multiple periods
+            short_trend = (df_current['close'].iloc[-5:].mean() - df_current['close'].iloc[-10:-5].mean()) / df_current['close'].iloc[-10:-5].mean()
+            medium_trend = (df_current['close'].iloc[-10:].mean() - df_current['close'].iloc[-20:-10].mean()) / df_current['close'].iloc[-20:-10].mean()
+            long_trend = (df_current['close'].iloc[-20:].mean() - df_current['close'].iloc[-40:-20].mean()) / df_current['close'].iloc[-40:-20].mean()
+            
+            return {
+                "short_term_trend": "bullish" if short_trend > 0.01 else "bearish" if short_trend < -0.01 else "neutral",
+                "medium_term_trend": "bullish" if medium_trend > 0.02 else "bearish" if medium_trend < -0.02 else "neutral",
+                "long_term_trend": "bullish" if long_trend > 0.03 else "bearish" if long_trend < -0.03 else "neutral",
+                "trend_alignment": all([short_trend > 0, medium_trend > 0, long_trend > 0]) or all([short_trend < 0, medium_trend < 0, long_trend < 0]),
+                "trend_strength": abs(short_trend) + abs(medium_trend) + abs(long_trend)
+            }
+        except Exception:
+            return {
+                "short_term_trend": "neutral",
+                "medium_term_trend": "neutral", 
+                "long_term_trend": "neutral",
+                "trend_alignment": False,
+                "trend_strength": 0
+            }
+    
+    def _get_dynamic_thresholds(self, volatility: float) -> Dict[str, float]:
+        """Calculate dynamic thresholds based on current volatility"""
+        # Normalize volatility (assume 2% is average)
+        vol_normalized = max(0.5, min(2.0, volatility / 0.02))
+        
+        return {
+            "rsi_oversold": max(20, 30 * (2 - vol_normalized)),  # More sensitive in low vol
+            "rsi_overbought": min(80, 70 * vol_normalized),      # Less sensitive in high vol
+            "volume_breakout": 1.5 * vol_normalized,             # Higher threshold in volatile markets
+            "momentum_threshold": 0.01 * vol_normalized          # Volatility-adjusted momentum
+        }
+    
+    def _detect_market_structure(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Analyze market structure and phase"""
+        try:
+            # Calculate price swings
+            highs = df['high'].rolling(5, center=True).max()
+            lows = df['low'].rolling(5, center=True).min()
+            
+            # Detect ranging vs trending
+            price_range = (df['high'].rolling(20).max() - df['low'].rolling(20).min()).iloc[-1]
+            avg_true_range = df['atr'].iloc[-1] if 'atr' in df.columns else price_range * 0.1
+            range_efficiency = price_range / (20 * avg_true_range) if avg_true_range > 0 else 1
+            
+            # Support/Resistance strength
+            current_price = df['close'].iloc[-1]
+            support_touches = sum(abs(df['low'].iloc[-20:] - df['support_level'].iloc[-1]) < avg_true_range)
+            resistance_touches = sum(abs(df['high'].iloc[-20:] - df['resistance_level'].iloc[-1]) < avg_true_range)
+            
+            return {
+                "market_phase": "trending" if range_efficiency > 0.6 else "ranging",
+                "support_strength": min(10, support_touches),
+                "resistance_strength": min(10, resistance_touches),
+                "breakout_probability": max(0.1, min(0.9, (support_touches + resistance_touches) / 20)),
+                "range_efficiency": float(range_efficiency)
+            }
+        except Exception:
+            return {
+                "market_phase": "unknown",
+                "support_strength": 0,
+                "resistance_strength": 0,
+                "breakout_probability": 0.5,
+                "range_efficiency": 0.5
+            }
+    
+    def _calculate_confluence_score(self, signals: Dict[str, bool], thresholds: Dict[str, float]) -> Dict[str, Any]:
+        """Calculate confluence score based on multiple aligned signals"""
+        # Weight different signal types
+        signal_weights = {
+            'trend_signals': ['bullish_momentum', 'above_ma_20', 'trend_alignment'],
+            'momentum_signals': ['rsi_oversold', 'rsi_overbought', 'momentum_breakout'],
+            'volume_signals': ['high_volume', 'volume_breakout'],
+            'structure_signals': ['near_support', 'near_resistance', 'breakout_setup']
+        }
+        
+        bullish_score = 0
+        bearish_score = 0
+        total_signals = 0
+        
+        for category, signal_list in signal_weights.items():
+            for signal in signal_list:
+                if signal in signals:
+                    total_signals += 1
+                    if signal in ['rsi_oversold', 'near_support', 'bullish_momentum', 'above_ma_20', 'high_volume']:
+                        if signals[signal]:
+                            bullish_score += 1
+                    elif signal in ['rsi_overbought', 'near_resistance', 'bearish_momentum']:
+                        if signals[signal]:
+                            bearish_score += 1
+        
+        net_score = (bullish_score - bearish_score) / max(total_signals, 1)
+        
+        return {
+            "confluence_score": float(net_score),
+            "bullish_signals": bullish_score,
+            "bearish_signals": bearish_score,
+            "signal_strength": "STRONG" if abs(net_score) > 0.6 else "MODERATE" if abs(net_score) > 0.3 else "WEAK",
+            "bias": "BULLISH" if net_score > 0.2 else "BEARISH" if net_score < -0.2 else "NEUTRAL"
+        }
+    
+    def _get_session_context(self) -> Dict[str, str]:
+        """Get current trading session context"""
+        try:
+            import datetime
+            utc_now = datetime.datetime.utcnow()
+            hour = utc_now.hour
+            
+            # Trading sessions (UTC)
+            if 0 <= hour < 8:
+                return {"session": "Asian", "session_character": "Lower volatility, range-bound"}
+            elif 8 <= hour < 16:
+                return {"session": "European", "session_character": "Medium volatility, trending"}
+            else:
+                return {"session": "US", "session_character": "Higher volatility, breakouts"}
+        except Exception:
+            return {"session": "Unknown", "session_character": "Normal"}
+
     async def fetch_trader_activities(self, trader_address: str, limit: int = 200) -> Dict[str, Any]:
         """Fetch Polymarket trader activities for analysis"""
         try:
@@ -1017,7 +1169,7 @@ class CryptoPredictionService:
 
     
 
-# Global feature columns definition - optimized set with reduced correlation
+# Enhanced feature columns definition - optimized set with new patterns
 FEATURE_COLUMNS = [
     # Core price momentum (keep most informative)
     'price_change', 'volatility', 'momentum_5',
@@ -1038,7 +1190,7 @@ FEATURE_COLUMNS = [
     'atr',
     
     # Volume (keep ratio and OBV)
-    'volume_ratio', 'obv',
+    'volume_ratio', 'obv', 'volume_momentum',
     
     # Price patterns (keep most informative)
     'close_position', 'body_size',
@@ -1050,7 +1202,11 @@ FEATURE_COLUMNS = [
     'trend_strength', 'higher_high', 'lower_low',
     
     # Advanced metrics
-    'sharpe_ratio', 'volatility_regime'
+    'sharpe_ratio', 'volatility_regime',
+    
+    # Enhanced regime and pattern features
+    'bull_market', 'volatility_breakout', 'doji', 'hammer', 'shooting_star',
+    'trend_alignment', 'ma_alignment', 'momentum_acceleration', 'rsi_momentum'
 ]
 
 # Initialize service
@@ -1128,58 +1284,126 @@ async def analyze_crypto_indicators(symbol: str, interval: str = "1h", limit: in
             # No incomplete period, current = latest complete
             current_period_features = latest_complete
         
-        # Simple trend calculation
-        def get_trend(series, periods=5):
-            if len(series) < periods:
-                return "neutral"
-            return "rising" if series.iloc[-1] > series.iloc[-periods] else "falling"
+        # Get current volatility for dynamic thresholds
+        current_volatility = float(latest_complete.get('volatility', 0.02))
+        dynamic_thresholds = crypto_service._get_dynamic_thresholds(current_volatility)
+        
+        # Multi-timeframe trend analysis
+        trend_analysis = crypto_service._get_multi_timeframe_trend(df_complete, interval)
+        
+        # Market structure analysis
+        market_structure = crypto_service._detect_market_structure(df_complete)
+        
+        # Session context
+        session_info = crypto_service._get_session_context()
         
         # Basic support/resistance (use complete data)
-        support_level = df_complete['low'].rolling(window=20).min().iloc[-1] if len(df_complete) >= 20 else df_complete['low'].min()
-        resistance_level = df_complete['high'].rolling(window=20).max().iloc[-1] if len(df_complete) >= 20 else df_complete['high'].max()
+        support_level = float(latest_complete.get('support_level', df_complete['low'].min()))
+        resistance_level = float(latest_complete.get('resistance_level', df_complete['high'].max()))
         
         # Time info
         current_hour_timestamp = current_period_data.get('open_time', int(time.time() * 1000))
         time_info = crypto_service._get_prediction_time_window(interval, current_hour_timestamp)
         
-        # Streamlined analysis
+        # Enhanced signals with dynamic thresholds
+        rsi_current = float(latest_complete.get('rsi_14', 50))
+        volume_current = float(current_period_features.get('volume_ratio', 1))
+        
+        enhanced_signals = {
+            # RSI with dynamic thresholds
+            "rsi_oversold": bool(rsi_current < dynamic_thresholds["rsi_oversold"]),
+            "rsi_overbought": bool(rsi_current > dynamic_thresholds["rsi_overbought"]),
+            "rsi_momentum": bool(float(current_period_features.get('rsi_momentum', 0)) > 0),
+            
+            # Volume analysis
+            "high_volume": bool(volume_current > 1.5),
+            "volume_breakout": bool(volume_current > dynamic_thresholds["volume_breakout"]),
+            "volume_momentum": bool(float(current_period_features.get('volume_momentum', 1)) > 1.2),
+            
+            # Trend and momentum
+            "above_ma_20": bool(current_price > float(latest_complete.get('sma_20', current_price))),
+            "bullish_momentum": bool(float(current_period_features.get('momentum_5', 0)) > dynamic_thresholds["momentum_threshold"]),
+            "bearish_momentum": bool(float(current_period_features.get('momentum_5', 0)) < -dynamic_thresholds["momentum_threshold"]),
+            "trend_alignment": bool(current_period_features.get('trend_alignment', 0)),
+            "ma_alignment": bool(current_period_features.get('ma_alignment', 0)),
+            
+            # Support/Resistance
+            "near_support": bool(abs(current_price - support_level) / current_price < 0.02),
+            "near_resistance": bool(abs(current_price - resistance_level) / current_price < 0.02),
+            
+            # Pattern recognition
+            "doji_pattern": bool(current_period_features.get('doji', 0)),
+            "hammer_pattern": bool(current_period_features.get('hammer', 0)),
+            "shooting_star": bool(current_period_features.get('shooting_star', 0)),
+            
+            # Market regime
+            "bull_market": bool(current_period_features.get('bull_market', 0)),
+            "volatility_breakout": bool(current_period_features.get('volatility_breakout', 0)),
+            "breakout_setup": market_structure["breakout_probability"] > 0.7
+        }
+        
+        # Calculate confluence score
+        confluence = crypto_service._calculate_confluence_score(enhanced_signals, dynamic_thresholds)
+        
+        # Enhanced analysis
         analysis = {
             "symbol": symbol,
             "current_price": float(current_price),
             "analysis_time": time_info["current_time"],
             
-            # Core indicators (use current period for live data)
-            "price_change_pct": float(current_period_features['price_change'] * 100) if pd.notna(current_period_features['price_change']) else 0,
-            "rsi": float(latest_complete['rsi_14']) if pd.notna(latest_complete['rsi_14']) else 50,
-            "volume_ratio": float(current_period_features['volume_ratio']) if 'volume_ratio' in current_period_features and pd.notna(current_period_features['volume_ratio']) else 1,
+            # Core indicators with dynamic context
+            "price_change_pct": float(current_period_features.get('price_change', 0) * 100),
+            "rsi": rsi_current,
+            "rsi_dynamic_oversold": dynamic_thresholds["rsi_oversold"],
+            "rsi_dynamic_overbought": dynamic_thresholds["rsi_overbought"],
+            "volume_ratio": volume_current,
+            "volatility": current_volatility,
             
-            # Key moving averages (use complete data for stability)
-            "ma_20": float(latest_complete['sma_20']) if pd.notna(latest_complete['sma_20']) else 0,
-            "ema_12": float(latest_complete['ema_12']) if pd.notna(latest_complete['ema_12']) else 0,
+            # Key moving averages
+            "ma_20": float(latest_complete.get('sma_20', 0)),
+            "ema_12": float(latest_complete.get('ema_12', 0)),
+            "price_vs_ma20": float(current_price / latest_complete.get('sma_20', current_price) - 1) if latest_complete.get('sma_20', 0) > 0 else 0,
             
-            # Momentum (use current vs complete data)
-            "momentum_5": float((current_price / df_complete['close'].iloc[-6] - 1) * 100) if len(df_complete) > 5 else 0,
+            # Multi-timeframe trend
+            "trend_analysis": trend_analysis,
             
-            # Support/Resistance (basic)
-            "support_level": float(support_level),
-            "resistance_level": float(resistance_level),
+            # Enhanced momentum
+            "momentum_5": float(current_period_features.get('momentum_5', 0) * 100),
+            "momentum_acceleration": float(current_period_features.get('momentum_acceleration', 0)),
+            
+            # Support/Resistance with strength
+            "support_level": support_level,
+            "resistance_level": resistance_level,
             "distance_to_support": float((current_price - support_level) / current_price * 100),
             "distance_to_resistance": float((resistance_level - current_price) / current_price * 100),
+            "support_strength": market_structure["support_strength"],
+            "resistance_strength": market_structure["resistance_strength"],
             
-            # Essential signals only
-            "signals": {
-                "rsi_oversold": bool(float(latest_complete['rsi_14']) < 30) if pd.notna(latest_complete['rsi_14']) else False,
-                "rsi_overbought": bool(float(latest_complete['rsi_14']) > 70) if pd.notna(latest_complete['rsi_14']) else False,
-                "above_ma_20": bool(float(current_price) > float(latest_complete['sma_20'])) if pd.notna(latest_complete['sma_20']) else False,
-                "high_volume": bool(float(current_period_features['volume_ratio']) > 1.5) if 'volume_ratio' in current_period_features and pd.notna(current_period_features['volume_ratio']) else False,
-                "bullish_momentum": bool(get_trend(df_complete['close']) == "rising" and ((current_price / df_complete['close'].iloc[-6] - 1) * 100) > 0) if len(df_complete) > 5 else False,
-                "bearish_momentum": bool(get_trend(df_complete['close']) == "falling" and ((current_price / df_complete['close'].iloc[-6] - 1) * 100) < 0) if len(df_complete) > 5 else False
+            # Market structure
+            "market_structure": market_structure,
+            
+            # Session context
+            "session_info": session_info,
+            
+            # Enhanced signals
+            "signals": enhanced_signals,
+            
+            # Confluence analysis
+            "confluence_analysis": confluence,
+            
+            # Risk assessment
+            "risk_assessment": {
+                "volatility_regime": "HIGH" if current_volatility > 0.04 else "MEDIUM" if current_volatility > 0.015 else "LOW",
+                "market_phase": market_structure["market_phase"],
+                "breakout_probability": market_structure["breakout_probability"],
+                "signal_reliability": confluence["signal_strength"]
             },
             
-            # Basic data quality
+            # Data quality
             "data_quality": {
                 "periods_analyzed": len(df_complete),
-                "sufficient_history": bool(len(df_complete) >= 50)
+                "sufficient_history": bool(len(df_complete) >= 50),
+                "features_calculated": len([col for col in df_complete.columns if not col.startswith('open_time')])
             }
         }
         
