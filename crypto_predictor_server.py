@@ -846,10 +846,41 @@ class CryptoPredictionService:
             probabilities = {}
             stored_cv_scores = model_info.get('cv_scores', {})
             
-            # Calculate mean CV scores for all models
+            # Calculate mean CV scores for individual models only
             cv_scores = {}
             for model_name in models.keys():
-                if model_name in stored_cv_scores:
+                if model_name == 'ensemble':
+                    # Calculate ensemble CV score as weighted average of individual model scores
+                    individual_scores = []
+                    individual_weights = []
+                    
+                    # Get weights from the VotingClassifier (VotingClassifier stores weights in .weights attribute)
+                    if hasattr(models['ensemble'], 'weights') and models['ensemble'].weights is not None:
+                        voting_weights = models['ensemble'].weights
+                    else:
+                        # Fallback: try to get from training info or use equal weights
+                        training_weights = model_info.get('ensemble_performance', {}).get('dynamic_weights', {})
+                        if training_weights:
+                            voting_weights = [
+                                training_weights.get('gradient_boosting', 1/3),
+                                training_weights.get('svm', 1/3), 
+                                training_weights.get('random_forest', 1/3)
+                            ]
+                        else:
+                            voting_weights = [1/3, 1/3, 1/3]
+                    model_names = ['gradient_boosting', 'svm', 'random_forest']
+                    
+                    for i, name in enumerate(model_names):
+                        if name in stored_cv_scores:
+                            individual_scores.append(np.mean(stored_cv_scores[name]))
+                            individual_weights.append(voting_weights[i] if i < len(voting_weights) else 1/3)
+                    
+                    if individual_scores:
+                        # Weighted average of individual model CV scores
+                        cv_scores[model_name] = np.average(individual_scores, weights=individual_weights)
+                    else:
+                        cv_scores[model_name] = 0.5  # Fallback
+                elif model_name in stored_cv_scores:
                     cv_scores[model_name] = np.mean(stored_cv_scores[model_name])
                 else:
                     cv_scores[model_name] = 0.5  # Default for missing scores
